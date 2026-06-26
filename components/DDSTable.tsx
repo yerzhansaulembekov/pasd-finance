@@ -94,10 +94,10 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
   const netBIWithPending   = expenseBIByMonth.map((v, i) => (months[i]?.incomeBI ?? 0) + (months[i]?.pendingBI ?? 0) - v)
   const netSENSATAWithPending = expenseSENSATAByMonth.map((v, i) => (months[i]?.incomeSENSATA ?? 0) + (months[i]?.pendingSENSATA ?? 0) - v)
 
-  const totalNetBI       = netBIByMonth.reduce((s, v) => s + v, 0)
-  const totalNetSENSATA  = netSENSATAByMonth.reduce((s, v) => s + v, 0)
-  const totalNetBIWithP  = netBIWithPending.reduce((s, v) => s + v, 0)
-  const totalNetSATAWithP = netSENSATAWithPending.reduce((s, v) => s + v, 0)
+  const totalNetBI       = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalFotCore - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
+  const totalNetSENSATA  = dds.openingBalanceSENSATA + dds.totalIncomeSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
+  const totalNetBIWithP  = totalNetBI + dds.totalPendingBI
+  const totalNetSATAWithP = totalNetSENSATA + dds.totalPendingSENSATA
 
   const totalIncome = dds.totalIncomeBI + dds.totalIncomeSENSATA
   const totalExpense = dds.totalFotBI + dds.totalFotCore + dds.totalFotSENSATA + dds.totalTaxBI + dds.totalTaxSENSATA + dds.totalIpCommissionBI + dds.totalOverhead
