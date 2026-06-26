@@ -106,6 +106,7 @@ function AnalyticsSection({ dds }: { dds: DDSSummary }) {
         <MetricCard label="ФОТ BI" value={fmt(dds.totalFotBI)} icon={IcoPeople} negative />
         <MetricCard label="Налоги BI" value={fmt(dds.totalTaxBI)} icon={IcoTax} negative />
         <MetricCard label="Накладные расходы BI" value={fmt(dds.totalOverhead)} icon={IcoOverhead} negative />
+        <MetricCard label="Сумма на счетах ИП" value={fmt(dds.totalIpOstatokBI)} icon={IcoWallet} color="text-slate-800" />
         <MetricCard
           label="ЧДП BI"
           value={fmt(netBI)}

@@ -136,7 +136,7 @@ export function DDSTable({ dds }: { dds: DDSSummary }) {
 
           {/* РАСХОД */}
           <SectionHeader label="▼  Расход" cols={cols} />
-          <Row label="ФОТ BI (сотрудники + CORE)"      values={mv(m => m.fotBI)}            total={dds.totalFotBI}            variant="sub" positiveIsGood={false} />
+          <Row label="ФОТ BI и Core"                   values={mv(m => m.fotBI)}            total={dds.totalFotBI}            variant="sub" positiveIsGood={false} />
           <Row label="Комиссия ИП 6%"                values={mv(m => m.ipCommissionBI)}   total={dds.totalIpCommissionBI}   variant="sub" positiveIsGood={false} />
           <Row label="ФОТ SENSATA Group"               values={mv(m => m.fotSENSATA)} total={dds.totalFotSENSATA} variant="sub" positiveIsGood={false} />
           <Row label="Налоги BI"                       values={mv(m => m.taxBI)}      total={dds.totalTaxBI}      variant="sub" positiveIsGood={false} />

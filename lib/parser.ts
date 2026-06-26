@@ -36,6 +36,7 @@ export interface ParsedSheet {
   taxBI: number[]           // [Jan..Dec] — Налоги BI
   taxSENSATA: number[]      // [Jan..Dec] — Налоги SENSATA
   ipCommissionBI: number[]  // [Jan..Dec] — Комиссия ИП 6%
+  ipOstatokBI: number[]     // [Jan..Dec] — Остаток на счетах ИП
   overheadByMonth: number[] // [Jan..Dec] — Косвенные из Транзакции
   openingBalanceBI: number
   openingBalanceSENSATA: number
@@ -194,7 +195,7 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
   // Exclude ИП остаток и ИП комиссия from fotBI (keep only сотрудники + CORE)
   for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i] - ipCommissionBI[i])
 
-  return { payments, fotBI, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
+  return { payments, fotBI, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, ipOstatokBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
 }
 
 export function parseExpensesSheet(csv: string): ExpenseRow[] {
@@ -277,6 +278,7 @@ export function buildDDS(parsed: ParsedSheet, expenses: ExpenseRow[]): DDSSummar
     totalTaxBI: sum(m => m.taxBI),
     totalTaxSENSATA: sum(m => m.taxSENSATA),
     totalIpCommissionBI: sum(m => m.ipCommissionBI),
+    totalIpOstatokBI: parsed.ipOstatokBI.reduce((s, v) => s + v, 0),
     totalOverhead: sum(m => m.overhead),
     months,
   }

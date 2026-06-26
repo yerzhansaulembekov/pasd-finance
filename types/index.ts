@@ -49,6 +49,7 @@ export interface DDSSummary {
   totalTaxBI: number
   totalTaxSENSATA: number
   totalIpCommissionBI: number
+  totalIpOstatokBI: number
   totalOverhead: number
   months: DDSMonth[]
 }
