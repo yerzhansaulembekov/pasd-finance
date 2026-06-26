@@ -180,7 +180,12 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
           {view !== "sensata" && (() => {
             const profitBIByMonth = mv(m => m.incomeBI + m.pendingBI - m.fotBI - m.fotCore - m.taxBI - m.ipCommissionBI - m.overhead)
             const totalProfitBI = dds.totalIncomeBI + dds.totalPendingBI - dds.totalFotBI - dds.totalFotCore - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
-            return <Row label="Чистая прибыль BI" values={profitBIByMonth} total={totalProfitBI} variant="net" />
+            const profitBINoCore = mv(m => m.incomeBI + m.pendingBI - m.fotBI - m.taxBI - m.ipCommissionBI - m.overhead)
+            const totalProfitBINoCore = dds.totalIncomeBI + dds.totalPendingBI - dds.totalFotBI - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
+            return <>
+              <Row label="Чистая прибыль BI" values={profitBIByMonth} total={totalProfitBI} variant="net" />
+              <Row label="  Чистая прибыль BI (без Core команды)" values={profitBINoCore} total={totalProfitBINoCore} variant="sub" />
+            </>
           })()}
           {view !== "bi" && (() => {
             const profitSENSATAByMonth = mv(m => m.incomeSENSATA + m.pendingSENSATA - m.fotSENSATA - m.taxSENSATA)
