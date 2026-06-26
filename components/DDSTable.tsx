@@ -52,12 +52,13 @@ function Row({
     "text-slate-600 font-normal"
 
   const indent = isSummary ? "pl-4" : "pl-8"
+  const stickyLabelCls = "sticky left-0 z-[1]"
 
   const { text: totalText, cls: totalCls } = fmtColored(total, positiveIsGood)
 
   return (
     <tr className={`border-b border-slate-100 transition-colors ${rowCls}`}>
-      <td className={`py-2.5 pr-4 text-sm whitespace-nowrap ${indent} ${labelCls}`}>{label}</td>
+      <td className={`py-2.5 pr-4 text-sm whitespace-nowrap ${indent} ${labelCls} ${stickyLabelCls} ${rowCls}`}>{label}</td>
       {values.map((v, i) => {
         const { text, cls } = fmtColored(v, positiveIsGood)
         return (
@@ -105,11 +106,11 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
   const closingBalance = net
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-auto">
-      <table className="min-w-full border-collapse text-sm">
+    <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-x-auto max-w-full">
+      <table className="w-full border-collapse text-sm" style={{ tableLayout: "fixed", minWidth: "900px" }}>
         <thead>
           <tr className="bg-[#0f172a] text-white">
-            <th className="py-3.5 pl-4 pr-4 text-left font-semibold text-sm min-w-[220px] sticky left-0 bg-[#0f172a]">Статья</th>
+            <th className="py-3.5 pl-4 pr-4 text-left font-semibold text-sm w-[220px] sticky left-0 z-10 bg-[#0f172a]">Статья</th>
             {months.map(m => (
               <th key={m.month} className="py-3.5 px-3 text-right font-semibold text-sm whitespace-nowrap min-w-[110px]">
                 {m.label}
