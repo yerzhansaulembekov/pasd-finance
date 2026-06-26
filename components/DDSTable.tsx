@@ -106,8 +106,8 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
   const closingBalance = net
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-x-auto max-w-full">
-      <table className="w-full border-collapse text-sm" style={{ tableLayout: "fixed", minWidth: "900px" }}>
+    <div className="rounded-2xl bg-white shadow-sm border border-slate-200 overflow-x-auto w-full">
+      <table className="border-collapse text-sm" style={{ minWidth: "700px" }}>
         <thead>
           <tr className="bg-[#0f172a] text-white">
             <th className="py-3.5 pl-4 pr-4 text-left font-semibold text-sm w-[220px] sticky left-0 z-10 bg-[#0f172a]">Статья</th>

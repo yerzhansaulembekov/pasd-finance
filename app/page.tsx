@@ -369,8 +369,8 @@ export default function Home() {
 
           {/* ── Акты ─────────────────────────────────────────── */}
           {section === "payments" && (
-            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-auto">
-              <table className="min-w-full text-sm">
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-x-auto w-full">
+              <table className="text-sm" style={{ minWidth: "500px" }}>
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">№</th>
@@ -405,8 +405,8 @@ export default function Home() {
 
           {/* ── Накладные расходы ────────────────────────────── */}
           {section === "expenses" && (
-            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-auto">
-              <table className="min-w-full text-sm">
+            <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-x-auto w-full">
+              <table className="text-sm" style={{ minWidth: "500px" }}>
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Дата</th>
@@ -465,8 +465,8 @@ function UsersSection() {
   if (loading) return <div className="text-slate-400 text-sm py-10 text-center">Загрузка…</div>
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-auto">
-      <table className="min-w-full text-sm">
+    <div className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-x-auto w-full">
+      <table className="text-sm" style={{ minWidth: "500px" }}>
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200">
             <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Пользователь</th>
