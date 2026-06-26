@@ -146,12 +146,12 @@ export function DDSTable({ dds }: { dds: DDSSummary }) {
 
           {/* ЧДП */}
           <SectionHeader label="◆  Чистый денежный поток" cols={cols} />
-          <Row label="ЧДП (факт)"              values={netWithPending}        total={net + dds.totalPendingBI + dds.totalPendingSENSATA} variant="net" />
-          <Row label="  ЧДП BI (факт)"         values={netBIWithPending}      total={totalNetBIWithP}                                    variant="sub" />
-          <Row label="  ЧДП SENSATA (факт)"    values={netSENSATAWithPending} total={totalNetSATAWithP}                                  variant="sub" />
-          <Row label="ЧДП (с ожиданием)"       values={netByMonth}            total={net}                                                variant="net" />
-          <Row label="  ЧДП BI (с ожиданием)"      values={netBIByMonth}          total={totalNetBI}                                    variant="sub" />
-          <Row label="  ЧДП SENSATA (с ожиданием)" values={netSENSATAByMonth}     total={totalNetSENSATA}                                variant="sub" />
+          <Row label="ЧДП (факт)"              values={netByMonth}            total={net}                                                variant="net" />
+          <Row label="  ЧДП BI (факт)"         values={netBIByMonth}          total={totalNetBI}                                         variant="sub" />
+          <Row label="  ЧДП SENSATA (факт)"    values={netSENSATAByMonth}     total={totalNetSENSATA}                                    variant="sub" />
+          <Row label="ЧДП (с ожиданием)"       values={netWithPending}        total={net + dds.totalPendingBI + dds.totalPendingSENSATA} variant="net" />
+          <Row label="  ЧДП BI (с ожиданием)"      values={netBIWithPending}      total={totalNetBIWithP}                                variant="sub" />
+          <Row label="  ЧДП SENSATA (с ожиданием)" values={netSENSATAWithPending} total={totalNetSATAWithP}                              variant="sub" />
           <Row label="Остаток на конец периода" values={months.map(() => 0)} total={closingBalance} variant="balance" />
         </tbody>
       </table>
