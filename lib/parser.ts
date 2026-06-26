@@ -1,127 +1,260 @@
-import type { Payment, Transaction, SummaryStats, CategoryStat, MonthlyStat } from "@/types"
+import type { PaymentRow, ExpenseRow, DDSSummary, DDSMonth } from "@/types"
 
-function parseNum(val: string): number {
+export const MONTH_LABELS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"]
+
+function parseNum(val: string | undefined): number {
   if (!val) return 0
-  return parseFloat(val.replace(/\s/g, "").replace(",", ".")) || 0
+  return parseFloat(val.replace(/[\s ]/g, "").replace(",", ".")) || 0
 }
 
-function parseDate(val: string): string {
-  if (!val) return ""
-  // Handle DD.MM.YYYY format
-  const match = val.match(/(\d{2})\.(\d{2})\.(\d{4})/)
-  if (match) return `${match[3]}-${match[2]}-${match[1]}`
-  return val
+function extractMonth(act: string): number {
+  const m = act.match(/от\s+\d{2}\.(\d{2})\.\d{4}/)
+  return m ? parseInt(m[1], 10) : 0
 }
 
-export function parsePaymentsCSV(csv: string): Payment[] {
-  const lines = csv.trim().split("\n")
-  if (lines.length < 2) return []
-  // Skip header row
-  return lines.slice(1).map((line) => {
-    const cols = splitCSVLine(line)
-    return {
-      date: parseDate(cols[0] ?? ""),
-      counterparty: cols[1] ?? "",
-      category: cols[2] ?? "",
-      amount: parseNum(cols[3] ?? ""),
-      currency: cols[4] ?? "KZT",
-      amountKZT: parseNum(cols[5] ?? cols[3] ?? ""),
-      description: cols[6] ?? "",
-    }
-  })
-}
-
-export function parseTransactionsCSV(csv: string): Transaction[] {
-  const lines = csv.trim().split("\n")
-  if (lines.length < 2) return []
-  return lines.slice(1).map((line) => {
-    const cols = splitCSVLine(line)
-    const typeRaw = (cols[1] ?? "").toLowerCase()
-    const type: Transaction["type"] =
-      typeRaw.includes("доход") || typeRaw.includes("приход")
-        ? "income"
-        : typeRaw.includes("перевод")
-        ? "transfer"
-        : "expense"
-    return {
-      date: parseDate(cols[0] ?? ""),
-      type,
-      account: cols[2] ?? "",
-      counterparty: cols[3] ?? "",
-      category: cols[4] ?? "",
-      amount: parseNum(cols[5] ?? ""),
-      currency: cols[6] ?? "KZT",
-      amountKZT: parseNum(cols[7] ?? cols[5] ?? ""),
-      balance: parseNum(cols[8] ?? ""),
-      description: cols[9] ?? "",
-    }
-  })
-}
-
-// Handles quoted CSV fields
-function splitCSVLine(line: string): string[] {
+function splitCSV(line: string): string[] {
   const result: string[] = []
-  let current = ""
-  let inQuotes = false
+  let cur = ""
+  let inQ = false
   for (const ch of line) {
-    if (ch === '"') {
-      inQuotes = !inQuotes
-    } else if (ch === "," && !inQuotes) {
-      result.push(current.trim())
-      current = ""
-    } else {
-      current += ch
-    }
+    if (ch === '"') { inQ = !inQ }
+    else if (ch === "," && !inQ) { result.push(cur.trim()); cur = "" }
+    else { cur += ch }
   }
-  result.push(current.trim())
+  result.push(cur.trim())
   return result
 }
 
-export function computeStats(transactions: Transaction[]): SummaryStats {
-  let totalIncome = 0
-  let totalExpense = 0
-  for (const t of transactions) {
-    if (t.type === "income") totalIncome += t.amountKZT
-    else if (t.type === "expense") totalExpense += t.amountKZT
+function rowText(cols: string[]): string {
+  return cols.join(" ").toUpperCase()
+}
+
+export interface ParsedSheet {
+  payments: PaymentRow[]
+  fotBI: number[]        // [Jan..Dec] — ФОТ BI + CORE + ИП
+  fotSENSATA: number[]   // [Jan..Dec] — ФОТ SENSATA
+  taxBI: number[]        // [Jan..Dec] — Налоги BI (distributed from quarterly)
+  taxSENSATA: number[]   // [Jan..Dec] — Налоги SENSATA
+  overheadByMonth: number[] // [Jan..Dec] — Косвенные из Транзакции
+  openingBalanceBI: number
+  openingBalanceSENSATA: number
+}
+
+export function parsePaymentsSheet(csv: string): ParsedSheet {
+  const lines = csv.trim().split("\n")
+
+  const payments: PaymentRow[] = []
+  const fotBI = new Array(12).fill(0)
+  const fotSENSATA = new Array(12).fill(0)
+  const taxBI = new Array(12).fill(0)
+  const taxSENSATA = new Array(12).fill(0)
+
+  let incomeSection: "BI" | "SENSATA" = "BI"
+  let fotSection: "BI" | "SENSATA" | null = null
+  let taxSection: "BI" | "SENSATA" | null = null
+  let inTax = false
+  let openingBalanceBI = 0
+  let openingBalanceSENSATA = 0
+  let openingSection: "BI" | "SENSATA" | null = null
+
+  for (const line of lines) {
+    const cols = splitCSV(line)
+    const txt = rowText(cols)
+    const colB = cols[1] ?? ""
+    const colE = cols[4] ?? ""  // ФИО / section header in FOT area
+
+    // ── Opening balance FIRST — before any continue ────────────────
+    if (txt.includes("ОСТАТОК НА НАЧАЛО")) {
+      const entity = txt.includes("SENSATA") ? "SENSATA" : "BI"
+      let val = 0
+      for (const c of cols) { const n = parseNum(c); if (n > 1_000_000) { val = n; break } }
+      if (val > 0) {
+        if (entity === "BI") openingBalanceBI = val
+        else openingBalanceSENSATA = val
+      } else {
+        openingSection = entity
+      }
+    } else if (openingSection) {
+      let val = 0
+      for (const c of cols) { const n = parseNum(c); if (n > 1_000_000) { val = n; break } }
+      if (val > 0) {
+        if (openingSection === "BI") openingBalanceBI = val
+        else openingBalanceSENSATA = val
+        openingSection = null
+      }
+    }
+
+    // ── Section detection ──────────────────────────────────────────
+    if (txt.includes("ПРИХОД SENSATA") || (txt.includes("SENSATA") && txt.includes("ПРИХОД"))) {
+      incomeSection = "SENSATA"
+    }
+    if (txt.includes("ФОТ ФАКТИЧЕСКИЙ") || colE.toUpperCase().includes("ФОТ ФАКТИЧЕСКИЙ")) {
+      fotSection = "BI"
+      inTax = false
+      continue
+    }
+    if (txt.includes("РАСХОДЫ ПО SENSATA") || (txt.includes("SENSATA") && (txt.includes("ФОТ") || txt.includes("РАСХОД")))) {
+      fotSection = "SENSATA"
+      inTax = false
+      continue
+    }
+    if (txt.includes("НАЛОГОВЫЕ РАСХОДЫ")) {
+      inTax = true
+      taxSection = txt.includes("SENSATA") ? "SENSATA" : (taxSection === "BI" ? "SENSATA" : "BI")
+      if (!txt.includes("SENSATA") && taxSection !== "SENSATA") taxSection = "BI"
+      fotSection = null
+      continue
+    }
+    if (txt.includes("КОСВЕННЫЕ РАСХОДЫ")) {
+      inTax = false
+      fotSection = null
+      continue
+    }
+
+    // ── Income rows (left side cols A-D) ──────────────────────────
+    if (colB.startsWith("Акт") || colB.startsWith("акт")) {
+      const month = extractMonth(colB)
+      if (month > 0) {
+        payments.push({
+          num: parseInt(cols[0] ?? "0", 10) || 0,
+          act: colB,
+          date: `2026-${String(month).padStart(2, "0")}`,
+          month,
+          amount: parseNum(cols[2]),
+          pending: parseNum(cols[3]),
+          section: incomeSection,
+          employee: colE,
+          paymentMethod: cols[5] ?? "",
+          status: cols[6] ?? "",
+          project: cols[7] ?? "",
+          salaryByMonth: [],
+        })
+      }
+    }
+
+    // ── FOT: use ИТОГО row as authoritative total ───────────────────
+    if (fotSection) {
+      const u0 = (cols[0] ?? "").toUpperCase().trim()
+      const u4 = colE.toUpperCase().trim()
+      const isItogo = u0 === "ИТОГО" || u0 === "ИТОГО:" || u4 === "ИТОГО" || u4 === "ИТОГО:"
+      if (isItogo) {
+        const target = fotSection === "BI" ? fotBI : fotSENSATA
+        // BI FOT months start at col 8, SENSATA FOT months start at col 5
+        const offset = fotSection === "BI" ? 8 : 5
+        const vals = Array.from({ length: 12 }, (_, mi) => parseNum(cols[offset + mi]))
+        // Only write if row has non-zero values (skip intermediate zero ИТОГО rows)
+        if (vals.some(v => v > 0)) {
+          for (let mi = 0; mi < 12; mi++) target[mi] = vals[mi]
+        }
+      }
+    }
+
+    // ── Tax rows: fixed positions from debug (cols 5,11,15,20) ───────
+    // Values are unquoted "879 845","38" pairs — integer part only is sufficient
+    if (inTax) {
+      const name = (cols[4] ?? "").trim()
+      const isDataRow = name.length > 2
+        && !name.toUpperCase().includes("ИТОГО")
+        && !name.toUpperCase().includes("НАИМЕН")
+        && !name.toUpperCase().includes("НАЛОГИ 2026")
+      if (isDataRow) {
+        const q1 = parseNum(cols[5])
+        const q2 = parseNum(cols[10])
+        const q3 = parseNum(cols[13])
+        const q4 = parseNum(cols[17])
+        if (q1 + q2 + q3 + q4 > 0) {
+          const target = taxSection === "SENSATA" ? taxSENSATA : taxBI
+          if (q1 > 0) target[2]  += q1  // март      — конец Q1
+          if (q2 > 0) target[5]  += q2  // июнь      — конец Q2
+          if (q3 > 0) target[8]  += q3  // сентябрь  — конец Q3
+          if (q4 > 0) target[11] += q4  // декабрь   — конец Q4
+        }
+      }
+    }
   }
+
+  return { payments, fotBI, fotSENSATA, taxBI, taxSENSATA, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
+}
+
+export function parseExpensesSheet(csv: string): ExpenseRow[] {
+  const lines = csv.trim().split("\n")
+  const rows: ExpenseRow[] = []
+
+  for (const line of lines.slice(1)) {
+    const cols = splitCSV(line)
+    if (!cols[0] || !cols[1]) continue
+    const dateParts = cols[0].match(/(\d{2})\.(\d{2})\.(\d{4})/)
+    if (!dateParts) continue
+    const month = parseInt(dateParts[2], 10)
+    rows.push({
+      date: `${dateParts[3]}-${dateParts[2]}-${dateParts[1]}`,
+      month,
+      amount: parseNum(cols[1]),
+      description: cols[2] ?? "",
+      category: cols[3] ?? "",
+      budget: cols[4] ?? "",
+    })
+  }
+
+  return rows
+}
+
+export function buildDDS(parsed: ParsedSheet, expenses: ExpenseRow[]): DDSSummary {
+  // Overhead by month from Транзакции sheet
+  const overheadByMonth = new Array(12).fill(0)
+  for (const e of expenses) {
+    if (e.month >= 1 && e.month <= 12) {
+      overheadByMonth[e.month - 1] += e.amount
+    }
+  }
+
+  const months: DDSMonth[] = []
+
+  // Collect all active months (from payments or any non-zero column)
+  const activeMonths = new Set<number>()
+  for (const p of parsed.payments) activeMonths.add(p.month)
+  for (let i = 0; i < 12; i++) {
+    if (parsed.fotBI[i] || parsed.fotSENSATA[i] || parsed.taxBI[i] || parsed.taxSENSATA[i] || overheadByMonth[i]) {
+      activeMonths.add(i + 1)
+    }
+  }
+
+  for (const mo of Array.from(activeMonths).sort((a, b) => a - b)) {
+    const mi = mo - 1
+    const incomeBI = parsed.payments.filter(p => p.section === "BI" && p.month === mo).reduce((s, p) => s + p.amount, 0)
+    const pendingBI = parsed.payments.filter(p => p.section === "BI" && p.month === mo).reduce((s, p) => s + p.pending, 0)
+    const incomeSENSATA = parsed.payments.filter(p => p.section === "SENSATA" && p.month === mo).reduce((s, p) => s + p.amount, 0)
+    const pendingSENSATA = parsed.payments.filter(p => p.section === "SENSATA" && p.month === mo).reduce((s, p) => s + p.pending, 0)
+
+    months.push({
+      month: mo,
+      label: MONTH_LABELS[mi],
+      incomeBI,
+      incomeSENSATA,
+      pendingBI,
+      pendingSENSATA,
+      fotBI: parsed.fotBI[mi],
+      fotSENSATA: parsed.fotSENSATA[mi],
+      taxBI: parsed.taxBI[mi],
+      taxSENSATA: parsed.taxSENSATA[mi],
+      overhead: overheadByMonth[mi],
+    })
+  }
+
+  const sum = (fn: (m: DDSMonth) => number) => months.reduce((s, m) => s + fn(m), 0)
+
   return {
-    totalIncome,
-    totalExpense,
-    netCashFlow: totalIncome - totalExpense,
-    transactionCount: transactions.length,
+    openingBalanceBI: parsed.openingBalanceBI,
+    openingBalanceSENSATA: parsed.openingBalanceSENSATA,
+    totalIncomeBI: sum(m => m.incomeBI),
+    totalIncomeSENSATA: sum(m => m.incomeSENSATA),
+    totalPendingBI: sum(m => m.pendingBI),
+    totalPendingSENSATA: sum(m => m.pendingSENSATA),
+    totalFotBI: sum(m => m.fotBI),
+    totalFotSENSATA: sum(m => m.fotSENSATA),
+    totalTaxBI: sum(m => m.taxBI),
+    totalTaxSENSATA: sum(m => m.taxSENSATA),
+    totalOverhead: sum(m => m.overhead),
+    months,
   }
-}
-
-export function computePaymentStats(payments: Payment[]): SummaryStats {
-  const total = payments.reduce((s, p) => s + p.amountKZT, 0)
-  return {
-    totalIncome: 0,
-    totalExpense: total,
-    netCashFlow: -total,
-    transactionCount: payments.length,
-  }
-}
-
-export function groupByCategory(items: (Payment | Transaction)[]): CategoryStat[] {
-  const map = new Map<string, CategoryStat>()
-  for (const item of items) {
-    const cat = item.category || "Без категории"
-    const existing = map.get(cat) ?? { category: cat, amount: 0, count: 0 }
-    existing.amount += item.amountKZT
-    existing.count += 1
-    map.set(cat, existing)
-  }
-  return Array.from(map.values()).sort((a, b) => b.amount - a.amount)
-}
-
-export function groupByMonth(transactions: Transaction[]): MonthlyStat[] {
-  const map = new Map<string, MonthlyStat>()
-  for (const t of transactions) {
-    const month = t.date.slice(0, 7) // YYYY-MM
-    const existing = map.get(month) ?? { month, income: 0, expense: 0 }
-    if (t.type === "income") existing.income += t.amountKZT
-    else if (t.type === "expense") existing.expense += t.amountKZT
-    map.set(month, existing)
-  }
-  return Array.from(map.values()).sort((a, b) => a.month.localeCompare(b.month))
 }

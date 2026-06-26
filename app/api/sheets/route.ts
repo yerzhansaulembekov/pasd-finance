@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`
 
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } })
+    const res = await fetch(url, { cache: "no-store" })
     if (!res.ok) throw new Error(`Google returned ${res.status}`)
     const csv = await res.text()
     return new NextResponse(csv, {

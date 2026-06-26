@@ -1,43 +1,52 @@
-export interface Payment {
+export interface PaymentRow {
+  num: number
+  act: string
   date: string
-  counterparty: string
-  category: string
+  month: number
   amount: number
-  currency: string
-  amountKZT: number
-  description: string
+  pending: number
+  section: "BI" | "SENSATA"
+  employee: string
+  paymentMethod: string
+  status: string
+  project: string
+  salaryByMonth: number[]
 }
 
-export interface Transaction {
+export interface ExpenseRow {
   date: string
-  type: "income" | "expense" | "transfer"
-  account: string
-  counterparty: string
-  category: string
+  month: number
   amount: number
-  currency: string
-  amountKZT: number
-  balance: number
   description: string
-}
-
-export interface SummaryStats {
-  totalIncome: number
-  totalExpense: number
-  netCashFlow: number
-  transactionCount: number
-}
-
-export interface CategoryStat {
   category: string
-  amount: number
-  count: number
+  budget: string
 }
 
-export interface MonthlyStat {
-  month: string
-  income: number
-  expense: number
+export interface DDSMonth {
+  month: number
+  label: string
+  incomeBI: number
+  incomeSENSATA: number
+  pendingBI: number
+  pendingSENSATA: number
+  fotBI: number
+  fotSENSATA: number
+  taxBI: number
+  taxSENSATA: number
+  overhead: number
 }
 
-export type SheetType = "payments" | "transactions"
+export interface DDSSummary {
+  openingBalanceBI: number
+  openingBalanceSENSATA: number
+  totalIncomeBI: number
+  totalIncomeSENSATA: number
+  totalPendingBI: number
+  totalPendingSENSATA: number
+  totalFotBI: number
+  totalFotSENSATA: number
+  totalTaxBI: number
+  totalTaxSENSATA: number
+  totalOverhead: number
+  months: DDSMonth[]
+}
