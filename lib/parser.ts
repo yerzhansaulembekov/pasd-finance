@@ -126,7 +126,7 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
     if ((inIpCommission || inIpOstatok) && (cols[4] ?? "").startsWith("ИП")) {
       const target = inIpCommission ? ipCommissionBI : ipOstatokBI
       for (let i = 0; i < 12; i++) target[i] += parseNum(cols[8 + i])
-      continue
+      // no continue — left side of same row may still have an act income
     }
 
     // ── Income rows (left side cols A-D) ──────────────────────────
