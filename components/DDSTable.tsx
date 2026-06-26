@@ -185,7 +185,7 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
             const totalProfitBINoCore = dds.totalIncomeBI + dds.totalPendingBI - dds.totalFotBI - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
             return <>
               <Row label="Чистая прибыль BI" values={profitBIByMonth} total={totalProfitBI} variant="net" />
-              <Row label="  ЧП BI (без Core)" values={profitBINoCore} total={totalProfitBINoCore} variant="sub" />
+              <Row label="  Чистая прибыль BI (без Core)" values={profitBINoCore} total={totalProfitBINoCore} variant="sub" />
             </>
           })()}
           {view !== "bi" && (() => {

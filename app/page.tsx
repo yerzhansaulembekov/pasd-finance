@@ -80,7 +80,7 @@ function GroupBlock({ title, color, children }: { title: string; color: string; 
         <div className={`w-1 h-5 rounded-full ${color}`} />
         <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">{title}</h2>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:grid-cols-3">{children}</div>
     </div>
   )
 }
@@ -201,8 +201,8 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen">
-      {/* ── Sidebar ─────────────────────────────────────────────── */}
-      <aside className="w-60 shrink-0 bg-[#0f172a] flex flex-col fixed top-0 left-0 h-full z-10">
+      {/* ── Sidebar (desktop only) ──────────────────────────────── */}
+      <aside className="hidden md:flex w-60 shrink-0 bg-[#0f172a] flex-col fixed top-0 left-0 h-full z-10">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -311,34 +311,48 @@ export default function Home() {
       </aside>
 
       {/* ── Main ────────────────────────────────────────────────── */}
-      <main className="ml-60 flex-1 min-h-screen bg-[#f4f6f9]">
+      <main className="md:ml-60 flex-1 min-h-screen bg-[#f4f6f9] pb-20 md:pb-0">
         {/* Top bar */}
-        <div className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <span className="text-slate-400">{activeNav.icon}</span>
+        <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-3 md:py-4 flex items-center justify-between sticky top-0 z-10">
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Mobile: logo */}
+            <div className="md:hidden flex items-center gap-2">
+              <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="10" fill="url(#mLogoGrad)"/><rect x="7" y="22" width="4" height="7" rx="1.5" fill="white" fillOpacity="0.5"/><rect x="13" y="16" width="4" height="13" rx="1.5" fill="white" fillOpacity="0.75"/><rect x="19" y="11" width="4" height="18" rx="1.5" fill="white"/><defs><linearGradient id="mLogoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#6366f1"/><stop offset="100%" stopColor="#4338ca"/></linearGradient></defs></svg>
+            </div>
+            <span className="text-slate-400 hidden md:block">{activeNav.icon}</span>
             <div>
-              <h1 className="text-base font-bold text-slate-900 leading-tight">{activeNav.label}</h1>
-              <p className="text-xs text-slate-400">{activeNav.sublabel}</p>
+              <h1 className="text-sm md:text-base font-bold text-slate-900 leading-tight">{activeNav.label}</h1>
+              <p className="text-xs text-slate-400 hidden md:block">{activeNav.sublabel}</p>
             </div>
           </div>
-          {dds && (
-            <p className="text-xs text-slate-400">
-              Обновлено: <span className="font-medium text-slate-600">{new Date().toLocaleString("ru-RU", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-            </p>
-          )}
+          <div className="flex items-center gap-2">
+            {dds && (
+              <p className="text-xs text-slate-400 hidden sm:block">
+                Обновлено: <span className="font-medium text-slate-600">{new Date().toLocaleString("ru-RU", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+              </p>
+            )}
+            <button
+              onClick={load}
+              disabled={loading}
+              className="md:hidden rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold py-1.5 px-3 transition-colors flex items-center gap-1"
+            >
+              <span className={loading ? "animate-spin inline-block" : "inline-block"}>↻</span>
+              {loading ? "…" : "Обновить"}
+            </button>
+          </div>
         </div>
 
-        <div className="px-8 py-6 space-y-6">
+        <div className="px-3 md:px-8 py-4 md:py-6 space-y-6">
           {error && <p className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">{error}</p>}
 
           {/* ── ДДС ──────────────────────────────────────────── */}
           {section === "dds" && (
             dds ? (
               <div>
-                <div className="flex gap-1 mb-4">
-                  {([["all","ДДС общий"],["bi","ДДС BI Group"],["sensata","ДДС Sensata Group"]] as [DDSView,string][]).map(([v,label]) => (
+                <div className="flex gap-1 mb-4 flex-wrap">
+                  {([["all","Общий"],["bi","BI Group"],["sensata","Sensata Group"]] as [DDSView,string][]).map(([v,label]) => (
                     <button key={v} onClick={() => setDdsView(v)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${ddsView === v ? "bg-indigo-600 text-white shadow" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}>
+                      className={`px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${ddsView === v ? "bg-indigo-600 text-white shadow" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}>
                       {label}
                     </button>
                   ))}
@@ -417,6 +431,23 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* ── Bottom nav (mobile only) ────────────────────────────── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-[#0f172a] border-t border-white/10 flex items-center justify-around px-1 py-1">
+        {NAV_ITEMS.map(item => {
+          const active = section === item.id
+          return (
+            <button
+              key={item.id}
+              onClick={() => setSection(item.id)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[56px] ${active ? "text-indigo-400" : "text-slate-500"}`}
+            >
+              <span className="w-5 h-5">{item.icon}</span>
+              <span className="text-[10px] font-medium leading-tight truncate max-w-[56px] text-center">{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
     </div>
   )
 }
