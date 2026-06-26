@@ -174,6 +174,29 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
           <Row label="Остаток на конец периода" values={months.map(() => 0)}
             total={view === "bi" ? totalNetBIWithP : view === "sensata" ? totalNetSATAWithP : closingBalance}
             variant="balance" />
+
+          {/* ЧИСТАЯ ПРИБЫЛЬ */}
+          <SectionHeader label="★  Чистая прибыль (начисление)" cols={cols} />
+          {view !== "sensata" && (() => {
+            const profitBIByMonth = mv(m => m.incomeBI + m.pendingBI - m.fotBI - m.fotCore - m.taxBI - m.ipCommissionBI - m.overhead)
+            const totalProfitBI = dds.totalIncomeBI + dds.totalPendingBI - dds.totalFotBI - dds.totalFotCore - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
+            return <Row label="Чистая прибыль BI" values={profitBIByMonth} total={totalProfitBI} variant="net" />
+          })()}
+          {view !== "bi" && (() => {
+            const profitSENSATAByMonth = mv(m => m.incomeSENSATA + m.pendingSENSATA - m.fotSENSATA - m.taxSENSATA)
+            const totalProfitSENSATA = dds.totalIncomeSENSATA + dds.totalPendingSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
+            return <Row label="Чистая прибыль SENSATA" values={profitSENSATAByMonth} total={totalProfitSENSATA} variant="net" />
+          })()}
+          {view === "all" && (() => {
+            const profitAllByMonth = mv(m =>
+              m.incomeBI + m.pendingBI + m.incomeSENSATA + m.pendingSENSATA
+              - m.fotBI - m.fotCore - m.fotSENSATA - m.taxBI - m.taxSENSATA - m.ipCommissionBI - m.overhead
+            )
+            const totalProfitAll =
+              dds.totalIncomeBI + dds.totalPendingBI + dds.totalIncomeSENSATA + dds.totalPendingSENSATA
+              - dds.totalFotBI - dds.totalFotCore - dds.totalFotSENSATA - dds.totalTaxBI - dds.totalTaxSENSATA - dds.totalIpCommissionBI - dds.totalOverhead
+            return <Row label="ИТОГО Чистая прибыль" values={profitAllByMonth} total={totalProfitAll} variant="net" />
+          })()}
         </tbody>
       </table>
     </div>

@@ -94,9 +94,13 @@ const IcoOverhead = <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 
 const IcoNet      = <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd"/></svg>
 const IcoClock    = <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/></svg>
 
+const IcoProfit = <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11a1 1 0 11-2 0V9.414l-1.293 1.293a1 1 0 01-1.414-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 9.414V13z" clipRule="evenodd"/></svg>
+
 function AnalyticsSection({ dds }: { dds: DDSSummary }) {
   const netBI = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalFotCore - dds.totalIpCommissionBI - dds.totalTaxBI - dds.totalOverhead
   const netSENSATA = dds.openingBalanceSENSATA + dds.totalIncomeSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
+  const profitBI = dds.totalIncomeBI + dds.totalPendingBI - dds.totalFotBI - dds.totalFotCore - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
+  const profitSENSATA = dds.totalIncomeSENSATA + dds.totalPendingSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
 
   return (
     <div className="space-y-8">
@@ -109,11 +113,13 @@ function AnalyticsSection({ dds }: { dds: DDSSummary }) {
         <MetricCard label="Налоги BI" value={fmt(dds.totalTaxBI)} icon={IcoTax} negative />
         <MetricCard label="Накладные расходы BI" value={fmt(dds.totalOverhead)} icon={IcoOverhead} negative />
         <MetricCard label="Сумма на счетах ИП" value={fmt(dds.totalIpOstatokBI)} icon={IcoWallet} color="text-slate-800" />
+        <MetricCard label="ЧДП BI" value={fmt(netBI)} icon={IcoNet} color={netBI >= 0 ? "text-indigo-600" : "text-rose-700"} />
         <MetricCard
-          label="ЧДП BI"
-          value={fmt(netBI)}
-          icon={IcoNet}
-          color={netBI >= 0 ? "text-indigo-600" : "text-rose-700"}
+          label="Чистая прибыль BI"
+          value={fmt(profitBI)}
+          icon={IcoProfit}
+          color={profitBI >= 0 ? "text-emerald-700" : "text-rose-700"}
+          sub="все акты − расходы"
         />
       </GroupBlock>
 
@@ -126,6 +132,13 @@ function AnalyticsSection({ dds }: { dds: DDSSummary }) {
         <MetricCard label="ФОТ SENSATA" value={fmt(dds.totalFotSENSATA)} icon={IcoPeople} negative />
         <MetricCard label="Налоги SENSATA" value={fmt(dds.totalTaxSENSATA)} icon={IcoTax} negative />
         <MetricCard label="ЧДП SENSATA" value={fmt(netSENSATA)} icon={IcoNet} color={netSENSATA >= 0 ? "text-indigo-600" : "text-rose-700"} />
+        <MetricCard
+          label="Чистая прибыль SENSATA"
+          value={fmt(profitSENSATA)}
+          icon={IcoProfit}
+          color={profitSENSATA >= 0 ? "text-emerald-700" : "text-rose-700"}
+          sub="все акты − расходы"
+        />
       </GroupBlock>
     </div>
   )
