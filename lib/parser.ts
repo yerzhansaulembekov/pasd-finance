@@ -119,10 +119,12 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
     // IP sections: with splitCSV, amounts are single quoted fields so col4=name, col8+i=months
     const col4 = (cols[4] ?? "").toUpperCase().trim()
     if (col4.includes("ПЕРЕЧЕНЬ ИП КОМИССИЯ")) {
-      inIpCommission = true; inIpOstatok = false; continue
+      inIpCommission = true; inIpOstatok = false
+      // no continue — left side of this row may have an act
     }
     if (col4.includes("ПЕРЕЧЕНЬ ИП ОСТАТОК")) {
-      inIpOstatok = true; inIpCommission = false; continue
+      inIpOstatok = true; inIpCommission = false
+      // no continue — left side of this row may have an act
     }
     if ((inIpCommission || inIpOstatok) && (cols[4] ?? "").startsWith("ИП")) {
       const target = inIpCommission ? ipCommissionBI : ipOstatokBI
