@@ -115,17 +115,17 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
       fotSection = null
       continue
     }
-    const col5 = (cols[5] ?? "").toUpperCase().trim()
-    if (col5.includes("ПЕРЕЧЕНЬ ИП КОМИССИЯ")) {
+    // IP sections: with splitCSV, amounts are single quoted fields so col4=name, col8+i=months
+    const col4 = (cols[4] ?? "").toUpperCase().trim()
+    if (col4.includes("ПЕРЕЧЕНЬ ИП КОМИССИЯ")) {
       inIpCommission = true; inIpOstatok = false; continue
     }
-    if (col5.includes("ПЕРЕЧЕНЬ ИП ОСТАТОК")) {
+    if (col4.includes("ПЕРЕЧЕНЬ ИП ОСТАТОК")) {
       inIpOstatok = true; inIpCommission = false; continue
     }
-    // IP data rows (ИП Байзульдинов etc.) — monthly unquoted pairs at col[9+i*2]
-    if ((inIpCommission || inIpOstatok) && (cols[5] ?? "").startsWith("ИП")) {
+    if ((inIpCommission || inIpOstatok) && (cols[4] ?? "").startsWith("ИП")) {
       const target = inIpCommission ? ipCommissionBI : ipOstatokBI
-      for (let i = 0; i < 12; i++) target[i] += parseNum(cols[9 + i * 2])
+      for (let i = 0; i < 12; i++) target[i] += parseNum(cols[8 + i])
       continue
     }
 
