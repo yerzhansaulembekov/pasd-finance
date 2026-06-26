@@ -103,7 +103,7 @@ function AnalyticsSection({ dds }: { dds: DDSSummary }) {
       <GroupBlock title="BI Group" color="bg-indigo-500">
         <MetricCard label="Остаток BI на начало 2026 года" value={fmt(dds.openingBalanceBI)} icon={IcoWallet} color="text-slate-800" />
         <MetricCard label="Приход BI" value={fmt(dds.totalIncomeBI)} icon={IcoArrowUp} color="text-emerald-600" sub={dds.totalPendingBI > 0 ? `+ ${fmt(dds.totalPendingBI)} ожидание` : undefined} />
-        <MetricCard label="ФОТ BI" value={fmt(dds.totalFotBI)} icon={IcoPeople} negative />
+        <MetricCard label="ФОТ BI и Core" value={fmt(dds.totalFotBI)} icon={IcoPeople} negative />
         <MetricCard label="Налоги BI" value={fmt(dds.totalTaxBI)} icon={IcoTax} negative />
         <MetricCard label="Накладные расходы BI" value={fmt(dds.totalOverhead)} icon={IcoOverhead} negative />
         <MetricCard label="Сумма на счетах ИП" value={fmt(dds.totalIpOstatokBI)} icon={IcoWallet} color="text-slate-800" />
