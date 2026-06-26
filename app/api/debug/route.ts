@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from "next/server"
 // GET /api/debug?sheetId=XXX&gid=YYY
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const sheetId = searchParams.get("sheetId")
-  const gid = searchParams.get("gid") ?? "0"
-  if (!sheetId) return NextResponse.json({ error: "sheetId required" }, { status: 400 })
+  const sheetId = searchParams.get("sheetId") ?? "1ax1ad1rgGPV8CSGa9t0-mSkoci_BNmdJUgvTd1bdTbM"
+  const gid = searchParams.get("gid") ?? "1040983495"
 
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`
   const res = await fetch(url)

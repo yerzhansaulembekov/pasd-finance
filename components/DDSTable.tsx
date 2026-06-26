@@ -81,25 +81,25 @@ export function DDSTable({ dds }: { dds: DDSSummary }) {
 
   const totalIncomeByMonth = mv(m => m.incomeBI + m.incomeSENSATA)
   const totalIncomeWithPending = mv(m => m.incomeBI + m.incomeSENSATA + m.pendingBI + m.pendingSENSATA)
-  const totalExpenseByMonth = mv(m => m.fotBI + m.fotSENSATA + m.taxBI + m.taxSENSATA + m.overhead)
+  const totalExpenseByMonth = mv(m => m.fotBI + m.fotSENSATA + m.taxBI + m.taxSENSATA + m.ipCommissionBI + m.overhead)
   const netByMonth = totalIncomeByMonth.map((v, i) => v - totalExpenseByMonth[i])
   const netWithPending = totalIncomeWithPending.map((v, i) => v - totalExpenseByMonth[i])
 
   // ЧДП по BI и SENSATA (по месяцам — без остатка, остаток только в ИТОГО)
-  const expenseBIByMonth   = mv(m => m.fotBI + m.taxBI + m.overhead)
+  const expenseBIByMonth   = mv(m => m.fotBI + m.taxBI + m.ipCommissionBI + m.overhead)
   const expenseSENSATAByMonth = mv(m => m.fotSENSATA + m.taxSENSATA)
   const netBIByMonth       = expenseBIByMonth.map((v, i) => (months[i]?.incomeBI ?? 0) - v)
   const netSENSATAByMonth  = expenseSENSATAByMonth.map((v, i) => (months[i]?.incomeSENSATA ?? 0) - v)
   const netBIWithPending   = expenseBIByMonth.map((v, i) => (months[i]?.incomeBI ?? 0) + (months[i]?.pendingBI ?? 0) - v)
   const netSENSATAWithPending = expenseSENSATAByMonth.map((v, i) => (months[i]?.incomeSENSATA ?? 0) + (months[i]?.pendingSENSATA ?? 0) - v)
 
-  const totalNetBI       = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalTaxBI - dds.totalOverhead
+  const totalNetBI       = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
   const totalNetSENSATA  = dds.openingBalanceSENSATA + dds.totalIncomeSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
   const totalNetBIWithP  = totalNetBI + dds.totalPendingBI
   const totalNetSATAWithP = totalNetSENSATA + dds.totalPendingSENSATA
 
   const totalIncome = dds.totalIncomeBI + dds.totalIncomeSENSATA
-  const totalExpense = dds.totalFotBI + dds.totalFotSENSATA + dds.totalTaxBI + dds.totalTaxSENSATA + dds.totalOverhead
+  const totalExpense = dds.totalFotBI + dds.totalFotSENSATA + dds.totalTaxBI + dds.totalTaxSENSATA + dds.totalIpCommissionBI + dds.totalOverhead
   const totalOpening = dds.openingBalanceBI + dds.openingBalanceSENSATA
   const net = totalOpening + totalIncome - totalExpense
   const closingBalance = net
@@ -136,7 +136,8 @@ export function DDSTable({ dds }: { dds: DDSSummary }) {
 
           {/* РАСХОД */}
           <SectionHeader label="▼  Расход" cols={cols} />
-          <Row label="ФОТ BI (сотрудники + ИП + CORE)" values={mv(m => m.fotBI)}      total={dds.totalFotBI}      variant="sub" positiveIsGood={false} />
+          <Row label="ФОТ BI (сотрудники + CORE)"      values={mv(m => m.fotBI)}            total={dds.totalFotBI}            variant="sub" positiveIsGood={false} />
+          <Row label="Комиссия ИП 6%"                values={mv(m => m.ipCommissionBI)}   total={dds.totalIpCommissionBI}   variant="sub" positiveIsGood={false} />
           <Row label="ФОТ SENSATA Group"               values={mv(m => m.fotSENSATA)} total={dds.totalFotSENSATA} variant="sub" positiveIsGood={false} />
           <Row label="Налоги BI"                       values={mv(m => m.taxBI)}      total={dds.totalTaxBI}      variant="sub" positiveIsGood={false} />
           <Row label="Налоги SENSATA"                  values={mv(m => m.taxSENSATA)} total={dds.totalTaxSENSATA} variant="sub" positiveIsGood={false} />

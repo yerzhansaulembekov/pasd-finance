@@ -33,6 +33,7 @@ export interface DDSMonth {
   fotSENSATA: number
   taxBI: number
   taxSENSATA: number
+  ipCommissionBI: number
   overhead: number
 }
 
@@ -47,6 +48,7 @@ export interface DDSSummary {
   totalFotSENSATA: number
   totalTaxBI: number
   totalTaxSENSATA: number
+  totalIpCommissionBI: number
   totalOverhead: number
   months: DDSMonth[]
 }
