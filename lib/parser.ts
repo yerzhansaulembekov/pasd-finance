@@ -37,6 +37,7 @@ export interface ParsedSheet {
   taxSENSATA: number[]      // [Jan..Dec] — Налоги SENSATA
   ipCommissionBI: number[]  // [Jan..Dec] — Комиссия ИП 6%
   ipOstatokBI: number[]     // [Jan..Dec] — Остаток на счетах ИП
+  fotCore: number[]         // [Jan..Dec] — ФОТ Core команда
   overheadByMonth: number[] // [Jan..Dec] — Косвенные из Транзакции
   openingBalanceBI: number
   openingBalanceSENSATA: number
@@ -52,6 +53,7 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
   const taxSENSATA = new Array(12).fill(0)
   const ipCommissionBI = new Array(12).fill(0)
   const ipOstatokBI = new Array(12).fill(0)
+  const fotCore = new Array(12).fill(0)
 
   let incomeSection: "BI" | "SENSATA" = "BI"
   let fotSection: "BI" | "SENSATA" | null = null
@@ -59,6 +61,7 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
   let inTax = false
   let inIpCommission = false
   let inIpOstatok = false
+  let inCore = false
   let openingBalanceBI = 0
   let openingBalanceSENSATA = 0
   let openingSection: "BI" | "SENSATA" | null = null
@@ -129,7 +132,18 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
     if ((inIpCommission || inIpOstatok) && (cols[4] ?? "").startsWith("ИП")) {
       const target = inIpCommission ? ipCommissionBI : ipOstatokBI
       for (let i = 0; i < 12; i++) target[i] += parseNum(cols[8 + i])
-      // no continue — left side of same row may still have an act income
+    }
+    // CORE команда: detect header then sum individual employee rows
+    if (col4.includes("CORE")) {
+      inCore = true
+    } else if (inCore && fotSection === "BI") {
+      const name = (cols[4] ?? "").trim()
+      const isDataRow = name.length > 1 && !name.toUpperCase().includes("ИТОГО")
+      if (isDataRow) {
+        for (let i = 0; i < 12; i++) fotCore[i] += parseNum(cols[8 + i])
+      } else if (name.toUpperCase().includes("ИТОГО")) {
+        inCore = false
+      }
     }
 
     // ── Income rows (left side cols A-D) ──────────────────────────
@@ -194,10 +208,10 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
     }
   }
 
-  // Exclude ИП остаток и ИП комиссия from fotBI (keep only сотрудники + CORE)
-  for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i] - ipCommissionBI[i])
+  // fotBI from ИТОГО = сотрудники + CORE + ИП остаток + ИП комиссия → extract each
+  for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i] - ipCommissionBI[i] - fotCore[i])
 
-  return { payments, fotBI, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, ipOstatokBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
+  return { payments, fotBI, fotCore, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, ipOstatokBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
 }
 
 export function parseExpensesSheet(csv: string): ExpenseRow[] {
@@ -258,6 +272,7 @@ export function buildDDS(parsed: ParsedSheet, expenses: ExpenseRow[]): DDSSummar
       pendingBI,
       pendingSENSATA,
       fotBI: parsed.fotBI[mi],
+      fotCore: parsed.fotCore[mi],
       fotSENSATA: parsed.fotSENSATA[mi],
       taxBI: parsed.taxBI[mi],
       taxSENSATA: parsed.taxSENSATA[mi],
@@ -276,6 +291,7 @@ export function buildDDS(parsed: ParsedSheet, expenses: ExpenseRow[]): DDSSummar
     totalPendingBI: sum(m => m.pendingBI),
     totalPendingSENSATA: sum(m => m.pendingSENSATA),
     totalFotBI: sum(m => m.fotBI),
+    totalFotCore: sum(m => m.fotCore),
     totalFotSENSATA: sum(m => m.fotSENSATA),
     totalTaxBI: sum(m => m.taxBI),
     totalTaxSENSATA: sum(m => m.taxSENSATA),

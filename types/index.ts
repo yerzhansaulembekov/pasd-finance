@@ -30,6 +30,7 @@ export interface DDSMonth {
   pendingBI: number
   pendingSENSATA: number
   fotBI: number
+  fotCore: number
   fotSENSATA: number
   taxBI: number
   taxSENSATA: number
@@ -45,6 +46,7 @@ export interface DDSSummary {
   totalPendingBI: number
   totalPendingSENSATA: number
   totalFotBI: number
+  totalFotCore: number
   totalFotSENSATA: number
   totalTaxBI: number
   totalTaxSENSATA: number

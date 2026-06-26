@@ -81,25 +81,25 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
 
   const totalIncomeByMonth = mv(m => m.incomeBI + m.incomeSENSATA)
   const totalIncomeWithPending = mv(m => m.incomeBI + m.incomeSENSATA + m.pendingBI + m.pendingSENSATA)
-  const totalExpenseByMonth = mv(m => m.fotBI + m.fotSENSATA + m.taxBI + m.taxSENSATA + m.ipCommissionBI + m.overhead)
+  const totalExpenseByMonth = mv(m => m.fotBI + m.fotCore + m.fotSENSATA + m.taxBI + m.taxSENSATA + m.ipCommissionBI + m.overhead)
   const netByMonth = totalIncomeByMonth.map((v, i) => v - totalExpenseByMonth[i])
   const netWithPending = totalIncomeWithPending.map((v, i) => v - totalExpenseByMonth[i])
 
   // ЧДП по BI и SENSATA (по месяцам — без остатка, остаток только в ИТОГО)
-  const expenseBIByMonth   = mv(m => m.fotBI + m.taxBI + m.ipCommissionBI + m.overhead)
+  const expenseBIByMonth   = mv(m => m.fotBI + m.fotCore + m.taxBI + m.ipCommissionBI + m.overhead)
   const expenseSENSATAByMonth = mv(m => m.fotSENSATA + m.taxSENSATA)
   const netBIByMonth       = expenseBIByMonth.map((v, i) => (months[i]?.incomeBI ?? 0) - v)
   const netSENSATAByMonth  = expenseSENSATAByMonth.map((v, i) => (months[i]?.incomeSENSATA ?? 0) - v)
   const netBIWithPending   = expenseBIByMonth.map((v, i) => (months[i]?.incomeBI ?? 0) + (months[i]?.pendingBI ?? 0) - v)
   const netSENSATAWithPending = expenseSENSATAByMonth.map((v, i) => (months[i]?.incomeSENSATA ?? 0) + (months[i]?.pendingSENSATA ?? 0) - v)
 
-  const totalNetBI       = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
+  const totalNetBI       = dds.openingBalanceBI + dds.totalIncomeBI - dds.totalFotBI - dds.totalFotCore - dds.totalTaxBI - dds.totalIpCommissionBI - dds.totalOverhead
   const totalNetSENSATA  = dds.openingBalanceSENSATA + dds.totalIncomeSENSATA - dds.totalFotSENSATA - dds.totalTaxSENSATA
   const totalNetBIWithP  = totalNetBI + dds.totalPendingBI
   const totalNetSATAWithP = totalNetSENSATA + dds.totalPendingSENSATA
 
   const totalIncome = dds.totalIncomeBI + dds.totalIncomeSENSATA
-  const totalExpense = dds.totalFotBI + dds.totalFotSENSATA + dds.totalTaxBI + dds.totalTaxSENSATA + dds.totalIpCommissionBI + dds.totalOverhead
+  const totalExpense = dds.totalFotBI + dds.totalFotCore + dds.totalFotSENSATA + dds.totalTaxBI + dds.totalTaxSENSATA + dds.totalIpCommissionBI + dds.totalOverhead
   const totalOpening = dds.openingBalanceBI + dds.openingBalanceSENSATA
   const net = totalOpening + totalIncome - totalExpense
   const closingBalance = net
@@ -142,13 +142,14 @@ export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" 
 
           {/* РАСХОД */}
           <SectionHeader label="▼  Расход" cols={cols} />
-          {view !== "sensata" && <Row label="ФОТ BI (сотрудники + CORE)" values={mv(m => m.fotBI)}          total={dds.totalFotBI}          variant="sub" positiveIsGood={false} />}
+          {view !== "sensata" && <Row label="ФОТ BI (сотрудники)"       values={mv(m => m.fotBI)}          total={dds.totalFotBI}          variant="sub" positiveIsGood={false} />}
+          {view !== "sensata" && <Row label="ФОТ Core команда"          values={mv(m => m.fotCore)}         total={dds.totalFotCore}        variant="sub" positiveIsGood={false} />}
           {view !== "sensata" && <Row label="Комиссия ИП 6%"             values={mv(m => m.ipCommissionBI)} total={dds.totalIpCommissionBI} variant="sub" positiveIsGood={false} />}
           {view !== "bi"      && <Row label="ФОТ SENSATA Group"          values={mv(m => m.fotSENSATA)}     total={dds.totalFotSENSATA}     variant="sub" positiveIsGood={false} />}
           {view !== "sensata" && <Row label="Налоги BI"                  values={mv(m => m.taxBI)}          total={dds.totalTaxBI}          variant="sub" positiveIsGood={false} />}
           {view !== "bi"      && <Row label="Налоги SENSATA"             values={mv(m => m.taxSENSATA)}     total={dds.totalTaxSENSATA}     variant="sub" positiveIsGood={false} />}
           {view !== "sensata" && <Row label="Накладные расходы (BI)"     values={mv(m => m.overhead)}       total={dds.totalOverhead}       variant="sub" positiveIsGood={false} />}
-          {view === "bi"      && <Row label="ИТОГО РАСХОД" values={mv(m => m.fotBI + m.taxBI + m.ipCommissionBI + m.overhead)} total={dds.totalFotBI + dds.totalTaxBI + dds.totalIpCommissionBI + dds.totalOverhead} variant="expense" positiveIsGood={false} />}
+          {view === "bi"      && <Row label="ИТОГО РАСХОД" values={mv(m => m.fotBI + m.fotCore + m.taxBI + m.ipCommissionBI + m.overhead)} total={dds.totalFotBI + dds.totalFotCore + dds.totalTaxBI + dds.totalIpCommissionBI + dds.totalOverhead} variant="expense" positiveIsGood={false} />}
           {view === "sensata" && <Row label="ИТОГО РАСХОД" values={mv(m => m.fotSENSATA + m.taxSENSATA)}                       total={dds.totalFotSENSATA + dds.totalTaxSENSATA}                                      variant="expense" positiveIsGood={false} />}
           {view === "all"     && <Row label="ИТОГО РАСХОД" values={totalExpenseByMonth} total={totalExpense} variant="expense" positiveIsGood={false} />}
 
