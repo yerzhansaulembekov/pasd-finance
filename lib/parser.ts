@@ -211,6 +211,13 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
   // fotBI from ИТОГО = сотрудники + CORE + ИП остаток + ИП комиссия → extract each
   for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i] - ipCommissionBI[i] - fotCore[i])
 
+  // debug: log pending by month
+  const pendingByMonth: Record<number, number> = {}
+  for (const p of payments) {
+    if (p.section === "BI") pendingByMonth[p.month] = (pendingByMonth[p.month] ?? 0) + p.pending
+  }
+  console.table(Object.entries(pendingByMonth).map(([m, v]) => ({ month: m, pendingBI: v })))
+
   return { payments, fotBI, fotCore, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, ipOstatokBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
 }
 
