@@ -191,8 +191,8 @@ export function parsePaymentsSheet(csv: string): ParsedSheet {
     }
   }
 
-  // Exclude ИП остаток from fotBI (keep only сотрудники + CORE)
-  for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i])
+  // Exclude ИП остаток и ИП комиссия from fotBI (keep only сотрудники + CORE)
+  for (let i = 0; i < 12; i++) fotBI[i] = Math.max(0, fotBI[i] - ipOstatokBI[i] - ipCommissionBI[i])
 
   return { payments, fotBI, fotSENSATA, taxBI, taxSENSATA, ipCommissionBI, overheadByMonth: new Array(12).fill(0), openingBalanceBI, openingBalanceSENSATA }
 }
