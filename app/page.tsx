@@ -21,6 +21,7 @@ async function fetchCSV(gid: string): Promise<string> {
 }
 
 type Section = "dds" | "analytics" | "payments" | "expenses" | "users"
+type DDSView = "all" | "bi" | "sensata"
 
 const NAV_ITEMS: { id: Section; label: string; sublabel: string; icon: React.ReactNode }[] = [
   {
@@ -132,6 +133,7 @@ function AnalyticsSection({ dds }: { dds: DDSSummary }) {
 export default function Home() {
   const { data: session } = useSession()
   const [section, setSection] = useState<Section>("analytics")
+  const [ddsView, setDdsView] = useState<DDSView>("all")
   const [parsed, setParsed] = useState<ParsedSheet | null>(null)
   const [expenses, setExpenses] = useState<ExpenseRow[]>([])
   const [dds, setDDS] = useState<DDSSummary | null>(null)
@@ -317,7 +319,19 @@ export default function Home() {
 
           {/* ── ДДС ──────────────────────────────────────────── */}
           {section === "dds" && (
-            dds ? <DDSTable dds={dds} /> : <EmptyState />
+            dds ? (
+              <div>
+                <div className="flex gap-1 mb-4">
+                  {([["all","ДДС общий"],["bi","ДДС BI Group"],["sensata","ДДС Sensata Group"]] as [DDSView,string][]).map(([v,label]) => (
+                    <button key={v} onClick={() => setDdsView(v)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${ddsView === v ? "bg-indigo-600 text-white shadow" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <DDSTable dds={dds} view={ddsView} />
+              </div>
+            ) : <EmptyState />
           )}
 
           {/* ── Аналитика ────────────────────────────────────── */}

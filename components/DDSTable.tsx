@@ -73,7 +73,7 @@ function Row({
   )
 }
 
-export function DDSTable({ dds }: { dds: DDSSummary }) {
+export function DDSTable({ dds, view = "all" }: { dds: DDSSummary; view?: "all" | "bi" | "sensata" }) {
   const { months } = dds
   const mv = (fn: (m: DDSMonth) => number) => months.map(fn)
   const tot = (fn: (m: DDSMonth) => number) => months.reduce((s, m) => s + fn(m), 0)
@@ -121,38 +121,58 @@ export function DDSTable({ dds }: { dds: DDSSummary }) {
         <tbody>
           {/* ОСТАТКИ */}
           <SectionHeader label="◉  Остатки на начало года" cols={cols} />
-          <Row label="Остаток BI"     values={months.map(() => 0)} total={dds.openingBalanceBI}     variant="sub" />
-          <Row label="Остаток SENSATA" values={months.map(() => 0)} total={dds.openingBalanceSENSATA} variant="sub" />
-          <Row label="ИТОГО остаток"  values={months.map(() => 0)} total={totalOpening}              variant="balance" />
+          {view !== "sensata" && <Row label="Остаток BI"     values={months.map(() => 0)} total={dds.openingBalanceBI}     variant="sub" />}
+          {view !== "bi"      && <Row label="Остаток SENSATA" values={months.map(() => 0)} total={dds.openingBalanceSENSATA} variant="sub" />}
+          <Row label="ИТОГО остаток" values={months.map(() => 0)}
+            total={view === "bi" ? dds.openingBalanceBI : view === "sensata" ? dds.openingBalanceSENSATA : totalOpening}
+            variant="balance" />
 
           {/* ПРИХОД */}
           <SectionHeader label="▲  Приход" cols={cols} />
-          <Row label="Приход BI (фактические)"           values={mv(m => m.incomeBI)}      total={dds.totalIncomeBI}      variant="sub" />
-          <Row label="Ожидание BI"                       values={mv(m => m.pendingBI)}     total={dds.totalPendingBI}     variant="sub" />
-          <Row label="Приход SENSATA Group (фактические)" values={mv(m => m.incomeSENSATA)} total={dds.totalIncomeSENSATA} variant="sub" />
-          <Row label="Ожидание SENSATA"                  values={mv(m => m.pendingSENSATA)} total={dds.totalPendingSENSATA} variant="sub" />
-          <Row label="ИТОГО ПРИХОД (факт)"       values={totalIncomeByMonth}   total={totalIncome}                                      variant="income" />
-          <Row label="ИТОГО ПРИХОД (с ожиданием)" values={totalIncomeWithPending} total={totalIncome + dds.totalPendingBI + dds.totalPendingSENSATA} variant="income" />
+          {view !== "sensata" && <Row label="Приход BI (фактические)" values={mv(m => m.incomeBI)} total={dds.totalIncomeBI} variant="sub" />}
+          {view !== "sensata" && <Row label="Ожидание BI"             values={mv(m => m.pendingBI)} total={dds.totalPendingBI} variant="sub" />}
+          {view !== "bi"      && <Row label="Приход SENSATA Group (фактические)" values={mv(m => m.incomeSENSATA)} total={dds.totalIncomeSENSATA} variant="sub" />}
+          {view !== "bi"      && <Row label="Ожидание SENSATA" values={mv(m => m.pendingSENSATA)} total={dds.totalPendingSENSATA} variant="sub" />}
+          {view === "bi"      && <Row label="ИТОГО ПРИХОД (факт)"        values={mv(m => m.incomeBI)}                         total={dds.totalIncomeBI}                              variant="income" />}
+          {view === "bi"      && <Row label="ИТОГО ПРИХОД (с ожиданием)" values={mv(m => m.incomeBI + m.pendingBI)}           total={dds.totalIncomeBI + dds.totalPendingBI}         variant="income" />}
+          {view === "sensata" && <Row label="ИТОГО ПРИХОД (факт)"        values={mv(m => m.incomeSENSATA)}                   total={dds.totalIncomeSENSATA}                         variant="income" />}
+          {view === "sensata" && <Row label="ИТОГО ПРИХОД (с ожиданием)" values={mv(m => m.incomeSENSATA + m.pendingSENSATA)} total={dds.totalIncomeSENSATA + dds.totalPendingSENSATA} variant="income" />}
+          {view === "all"     && <Row label="ИТОГО ПРИХОД (факт)"        values={totalIncomeByMonth}      total={totalIncome}                                                      variant="income" />}
+          {view === "all"     && <Row label="ИТОГО ПРИХОД (с ожиданием)" values={totalIncomeWithPending}  total={totalIncome + dds.totalPendingBI + dds.totalPendingSENSATA}      variant="income" />}
 
           {/* РАСХОД */}
           <SectionHeader label="▼  Расход" cols={cols} />
-          <Row label="ФОТ BI (сотрудники + CORE)"        values={mv(m => m.fotBI)}            total={dds.totalFotBI}            variant="sub" positiveIsGood={false} />
-          <Row label="Комиссия ИП 6%"                values={mv(m => m.ipCommissionBI)}   total={dds.totalIpCommissionBI}   variant="sub" positiveIsGood={false} />
-          <Row label="ФОТ SENSATA Group"               values={mv(m => m.fotSENSATA)} total={dds.totalFotSENSATA} variant="sub" positiveIsGood={false} />
-          <Row label="Налоги BI"                       values={mv(m => m.taxBI)}      total={dds.totalTaxBI}      variant="sub" positiveIsGood={false} />
-          <Row label="Налоги SENSATA"                  values={mv(m => m.taxSENSATA)} total={dds.totalTaxSENSATA} variant="sub" positiveIsGood={false} />
-          <Row label="Накладные расходы (BI)"          values={mv(m => m.overhead)}   total={dds.totalOverhead}   variant="sub" positiveIsGood={false} />
-          <Row label="ИТОГО РАСХОД" values={totalExpenseByMonth} total={totalExpense} variant="expense" positiveIsGood={false} />
+          {view !== "sensata" && <Row label="ФОТ BI (сотрудники + CORE)" values={mv(m => m.fotBI)}          total={dds.totalFotBI}          variant="sub" positiveIsGood={false} />}
+          {view !== "sensata" && <Row label="Комиссия ИП 6%"             values={mv(m => m.ipCommissionBI)} total={dds.totalIpCommissionBI} variant="sub" positiveIsGood={false} />}
+          {view !== "bi"      && <Row label="ФОТ SENSATA Group"          values={mv(m => m.fotSENSATA)}     total={dds.totalFotSENSATA}     variant="sub" positiveIsGood={false} />}
+          {view !== "sensata" && <Row label="Налоги BI"                  values={mv(m => m.taxBI)}          total={dds.totalTaxBI}          variant="sub" positiveIsGood={false} />}
+          {view !== "bi"      && <Row label="Налоги SENSATA"             values={mv(m => m.taxSENSATA)}     total={dds.totalTaxSENSATA}     variant="sub" positiveIsGood={false} />}
+          {view !== "sensata" && <Row label="Накладные расходы (BI)"     values={mv(m => m.overhead)}       total={dds.totalOverhead}       variant="sub" positiveIsGood={false} />}
+          {view === "bi"      && <Row label="ИТОГО РАСХОД" values={mv(m => m.fotBI + m.taxBI + m.ipCommissionBI + m.overhead)} total={dds.totalFotBI + dds.totalTaxBI + dds.totalIpCommissionBI + dds.totalOverhead} variant="expense" positiveIsGood={false} />}
+          {view === "sensata" && <Row label="ИТОГО РАСХОД" values={mv(m => m.fotSENSATA + m.taxSENSATA)}                       total={dds.totalFotSENSATA + dds.totalTaxSENSATA}                                      variant="expense" positiveIsGood={false} />}
+          {view === "all"     && <Row label="ИТОГО РАСХОД" values={totalExpenseByMonth} total={totalExpense} variant="expense" positiveIsGood={false} />}
 
           {/* ЧДП */}
           <SectionHeader label="◆  Чистый денежный поток" cols={cols} />
-          <Row label="ЧДП (факт)"              values={netByMonth}            total={net}                                                variant="net" />
-          <Row label="  ЧДП BI (факт)"         values={netBIByMonth}          total={totalNetBI}                                         variant="sub" />
-          <Row label="  ЧДП SENSATA (факт)"    values={netSENSATAByMonth}     total={totalNetSENSATA}                                    variant="sub" />
-          <Row label="ЧДП (с ожиданием)"       values={netWithPending}        total={net + dds.totalPendingBI + dds.totalPendingSENSATA} variant="net" />
-          <Row label="  ЧДП BI (с ожиданием)"      values={netBIWithPending}      total={totalNetBIWithP}                                variant="sub" />
-          <Row label="  ЧДП SENSATA (с ожиданием)" values={netSENSATAWithPending} total={totalNetSATAWithP}                              variant="sub" />
-          <Row label="Остаток на конец периода" values={months.map(() => 0)} total={closingBalance} variant="balance" />
+          {view === "all" && <>
+            <Row label="ЧДП (факт)"              values={netByMonth}        total={net}                                                variant="net" />
+            <Row label="  ЧДП BI (факт)"         values={netBIByMonth}      total={totalNetBI}                                         variant="sub" />
+            <Row label="  ЧДП SENSATA (факт)"    values={netSENSATAByMonth} total={totalNetSENSATA}                                    variant="sub" />
+            <Row label="ЧДП (с ожиданием)"       values={netWithPending}    total={net + dds.totalPendingBI + dds.totalPendingSENSATA} variant="net" />
+            <Row label="  ЧДП BI (с ожиданием)"      values={netBIWithPending}      total={totalNetBIWithP}   variant="sub" />
+            <Row label="  ЧДП SENSATA (с ожиданием)" values={netSENSATAWithPending} total={totalNetSATAWithP} variant="sub" />
+          </>}
+          {view === "bi" && <>
+            <Row label="ЧДП BI (факт)"         values={netBIByMonth}      total={totalNetBI}      variant="net" />
+            <Row label="ЧДП BI (с ожиданием)"  values={netBIWithPending}  total={totalNetBIWithP} variant="net" />
+          </>}
+          {view === "sensata" && <>
+            <Row label="ЧДП SENSATA (факт)"        values={netSENSATAByMonth}      total={totalNetSENSATA}   variant="net" />
+            <Row label="ЧДП SENSATA (с ожиданием)" values={netSENSATAWithPending}  total={totalNetSATAWithP} variant="net" />
+          </>}
+          <Row label="Остаток на конец периода" values={months.map(() => 0)}
+            total={view === "bi" ? totalNetBIWithP : view === "sensata" ? totalNetSATAWithP : closingBalance}
+            variant="balance" />
         </tbody>
       </table>
     </div>
